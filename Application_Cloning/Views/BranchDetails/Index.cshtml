@@ -1,0 +1,118 @@
+﻿@model List<Application_Cloning.DbContext_Data.BranchDetails>
+@{
+   
+   // ViewData["Title"] = "Index";
+   
+}
+
+<h1>Branch Details</h1>
+
+<button type="button" style="float:right" class="btn btn-primary" data-toggle="modal" data-target="#addModal">Add Branch</button>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Sl No</th>
+            <th>Branch</th>
+            <th>Migration Type </th>
+        </tr>
+    </thead>
+    <tbody>
+        @for (int i = 0; i < Model.Count; i++)
+        {
+            <tr>
+                <td>@(i+1)</td>
+                <td>@Model[i].Branch</td>
+                <td>@Model[i].MigrationType</td>
+            </tr>           
+        }
+        
+    </tbody>
+</table>
+
+
+<!-- Modal -->
+<div class="modal fade" id="addModal" tabindex="-1" role="dialog" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addModalLabel">Add Branch</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Add your form here -->
+                <form id="addForm">
+                    <div class="form-group">
+                        <label for="Branch">Branch Name</label>
+                        <input type="text" class="form-control" id="branchName" placeholder="Enter branch name">
+                    </div>
+                    <div class="form-group">
+                        <label for="MigrationType">Migration Type</label>
+
+                        <select class="form-control" id="MigrationType">
+                            <option value="">Please Select</option>
+                            <option value="InitialCreate">InitialCreate</option>
+                            <option value="No">No</option>
+                        </select>
+                        @*<input type="text" class="form-control" id="MigrationType" placeholder="Enter Migration Type">*@
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <label style="color:red" id="messageError"></label>
+                <button type="button" class="btn btn-primary" id="saveButton">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+
+    $(document).ready(function () {
+        $("#saveButton").click(function () {           
+            var branchName = $("#branchName").val();
+            var migrationType = $("#MigrationType").val();
+            saveBranchData(branchName, migrationType);            
+        });
+    });
+
+    function saveBranchData(name, migrationType) {       
+        $.ajax({
+            url: "/addBranch", 
+            method: "POST",
+            data: { branchName: name, migrationType: migrationType }, 
+            success: function (response) {
+                if(response.status == "success"){
+                    window.location.href = "/BranchDetails/Index"
+                    $("#addModal").modal("hide");
+                }
+                else{
+                    $("#messageError").html(response.message);
+                }               
+
+            },
+            error: function (error) {
+                //console.error("Error:", error);
+            }
+        });
+    }
+    
+</script>
+
+
+
+
+
