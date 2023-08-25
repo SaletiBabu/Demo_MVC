@@ -36,7 +36,7 @@ namespace Application_Cloning.Controllers
             try
             {
                 bool vaildCheck = _Db.BranchDetails.Any(cus => cus.Branch == branchName && cus.MigrationType==migrationType);
-                if (!vaildCheck)
+                if (vaildCheck)
                 {
                     var addBranch = new BranchDetails()
                     {
@@ -52,7 +52,7 @@ namespace Application_Cloning.Controllers
 
                     string guid = Guid.NewGuid().ToString();
                     //string tempFolderPath = $"Cloning_{guid}";
-                    //CloneBranch(branchName, tempFolderPath);
+                    CloneBranch(branchName, tempFolderPath);
 
                     // Run migration command
                     //string migrationResult = RunMigrationCommand(tempFolderPath, migrationType);
@@ -138,7 +138,7 @@ namespace Application_Cloning.Controllers
         }
         private void CloneBranch(string branchName, string targetFolderPath)
         {
-            Repository.Clone("https://github.com/SumanthBabu4/ProjectDemo_1.git", targetFolderPath,
+            Repository.Clone("https://github.com/SumanthBabu4", targetFolderPath,
                 new CloneOptions
                 {
                     BranchName = branchName
