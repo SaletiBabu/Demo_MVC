@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NuGet.DependencyResolver;
 using NuGet.Packaging.Signing;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -36,7 +37,7 @@ namespace Application_Cloning.Controllers
             try
             {
                 bool vaildCheck = _Db.BranchDetails.Any(cus => cus.Branch == branchName && cus.MigrationType==migrationType);
-                if (vaildCheck)
+                if (!vaildCheck)
                 {
                     var addBranch = new BranchDetails()
                     {
@@ -47,16 +48,42 @@ namespace Application_Cloning.Controllers
                     await _Db.BranchDetails.AddAsync(addBranch);
                     await _Db.SaveChangesAsync();
 
-                    var tempFolderName = $"Cloning_{Guid.NewGuid()}";
-                    var tempFolderPath = Path.Combine(_tempFolderRoot, tempFolderName);
+                    string repositoryUrl = "https://github.com/SumanthBabu4/Demo.git";
+                    string tempFolderName = $"Cloning_{Guid.NewGuid()}";
+                    string tempFolderPath = Path.Combine(_tempFolderRoot, tempFolderName);
 
-                    string guid = Guid.NewGuid().ToString();
-                    //string tempFolderPath = $"Cloning_{guid}";
-                    CloneBranch(branchName, tempFolderPath);
+                    //var tempFolderPath = Path.Combine(Path.Combine(Directory.GetCurrentDirectory()));
+                    // Clone the repository
+                    Repository.Clone(repositoryUrl, tempFolderPath);
+
+                    // Open the cloned repository
+                    using (var repo = new Repository(tempFolderPath))
+                    {
+                        // Checkout the desired branch
+                        var branch = repo.Branches[branchName];
+                        if (branch != null)
+                        {
+                            // Get the tip (latest commit) of the branch
+                            var commit = branch.Tip;
+
+                            // Checkout the branch
+                            Commands.Checkout(repo, commit, new CheckoutOptions
+                            {
+                                CheckoutModifiers = CheckoutModifiers.Force
+
+                            });
+                        }
+                        else
+                        {
+                            
+                            return Json(new { status = "error", message = "Branch '{branchName}' not found." });
+                        }
+                    }
+
 
                     // Run migration command
-                    //string migrationResult = RunMigrationCommand(tempFolderPath, migrationType);
-                    string migrationResult = RunMigrationCommand("C:\\Users\\Saleti.Babu\\source\\repos\\Application_Cloning\\Application_Cloning", "InitialCreate");
+                    string migrationResult = RunMigrationCommand(tempFolderPath, migrationType);
+                    //string migrationResult = RunMigrationCommand("C:\\Users\\Saleti.Babu\\source\\repos\\Application_Cloning\\Application_Cloning", "InitialCreate");
 
                     return Json(new { status = "success", message = "Data saved successfully" });//RedirectToAction(nameof(Index));
                 }
@@ -148,7 +175,8 @@ namespace Application_Cloning.Controllers
         private string RunMigrationCommand(string workingDirectory, string migrationType)
         {
             // Replace with your actual migration command
-            string migrationCommand = $"dotnet ef database update --migration {migrationType}";
+           // string migrationCommand = $"dotnet ef database update --migration {migrationType}";
+            string migrationCommand = $"dotnet ef migrations add Demo_2 --context DemoDbContext";
 
             ProcessStartInfo psi = new ProcessStartInfo
             {
